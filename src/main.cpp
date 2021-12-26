@@ -4,6 +4,7 @@
 #include <graphics.h>
 #include <time.h>
 #include <math.h>
+#include "include/Clock.h"
 
 #define SCREEN_HEIGHT 500 //設定遊戲視窗高度 
 #define SCREEN_WIDTH 500 //設定遊戲視窗寬度
@@ -113,7 +114,7 @@ int totalTime = 0; //紀錄遊戲時間
 int stepCount = 0; //步數計數器 
 int const scorePerResource = 1; //每一份資源可得分數 
 bool IFPlayAI = false; //是否開啟AI模式 
-
+GameClock gameClock;
 // 主程式      
 int main(){  	
 	openWindow();
@@ -166,13 +167,14 @@ int main(){
 		Node headZombie = {15, 15, RIGHT, NULL}; //設定喪屍屍頭初始位置和方向 
 		NodePointer zombie = &headZombie;
 		NodePointer player = &headPlayer;
-		
 		char key;
 		key = playGame(field, zombie, player); //進行遊戲
 		if (key == 'q' || key == 'Q')
 			closeGame(zombie); //如果生存者輸入'q'離開遊戲	
-		else if (key == 's' || key == 'S')
-			continue; //如果生存者輸入's' 繼續遊戲 		    
+		else if (key == 's' || key == 'S') {
+			continue; //如果生存者輸入's' 繼續遊戲
+		}
+			 		    
 	}
 }
 
@@ -193,7 +195,8 @@ int playGame(int field[][GRID_SIDE], NodePointer zombie, NodePointer player) {
 	stepCount = 0;
 	killedCount = 0; 
 	bool killed = true;
-	srand((unsigned)time(NULL)); //取目前系統時間作為亂數種子 
+	srand((unsigned)time(NULL)); //取目前系統時間作為亂數種子
+	gameClock.initClock();
 	drawGameField(field); //繪製遊戲區域 
 	createResource(field, zombie); //產生第一份資源 
 	
@@ -375,12 +378,13 @@ bool IsAtZombie(NodePointer zombie, int row, int col){
 
 //遊戲結束訊息
 int showGameOverMsg(){
-   	//cleardevice(); //清理所有螢幕資料，如果希望只顯示訊息時，取消註解 
+   	/*cleardevice(); //清理所有螢幕資料，如果希望只顯示訊息時，取消註解 */
 	int i = 0;
 	char msg1[15] = "Game Over!!";
 	char msg2[40] = "press [q] to quit or [s] to restart!!";
    	for(; ; i++){
-	   	setcolor(i%14);
+		if(!(i%16))	continue;	
+	   	setcolor(i%16);
 	   	settextstyle(TRIPLEX_FONT, HORIZ_DIR , 7);
 	   	outtextxy(0, SCREEN_HEIGHT / 2, msg1);
 	   	
@@ -406,7 +410,7 @@ int showGameOverMsg(){
 
 //顯示遊戲相關資訊
 void showInfo(){
-	totalTime += speed;
+	gameClock.updateClock();
 	char timeMsg[45] = " Time:";
 	char scoreMsg[45] = "Score:";
 	char killedMsg[50] = "Killed Zombie:";
@@ -417,8 +421,7 @@ void showInfo(){
 	char time[10];
 	char score[10];
 	char killed[10];
-	
-	sprintf(time, "%5d", totalTime/1000);
+	sprintf(time, "%5d", gameClock.getTotalTime() / CLOCKS_PER_SEC);
 	strcat(timeMsg, time);
 	strcat(timeMsg, " sec.");
 	
