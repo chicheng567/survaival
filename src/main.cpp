@@ -1,124 +1,61 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <conio.h>
-#include <graphics.h>
-#include <time.h>
-#include <math.h>
+
+#include "include/coreHeader.h"
 #include "include/Clock.h"
-
-#define SCREEN_HEIGHT 500 //設定遊戲視窗高度 
-#define SCREEN_WIDTH 500 //設定遊戲視窗寬度
-#define GRID_SIDE 40 //設定遊戲方陣每邊格子數量 
-#define LEFT_MARGINE 30 //設定左邊界 
-#define TOP_MARGINE 40 //設定上邊界 
-#define RESOURCE_AMOUNT 1 //設定每次產生資源數量 
-#define PER_RESOURCE_KILL 5 //設定多少資源數量可以殺掉一隻喪屍 
-#define INIT_SPEED  80 //設定初始移動速度 
-#define MAX_QUEUE_SIZE 1600 //設定柱列大小 
-
-//宣告前進方向列舉函數 
-enum Direction {
-	RIGHT, 
-	LEFT, 
-	UP, 
-	DOWN 
-};
-
-//宣告遊戲場出現物體列舉函數 
-enum Object {
-	EMPTY, //空白 
-	WALL, //牆或障礙物 
-	RESOURCE //資原 
-};
-
-//宣告喪屍身體節點結構 
-struct Node {
-	int row; //節點位在第幾行 
-	int col; //節點位在第幾列 
-	Direction direct; //該節點的前進方向 
-	struct Node *next;	//指向下一個節點 
-}; 
-
-//定義指向節點結構的指標變數 
-typedef struct Node *NodePointer;
-
-//定義座標結構 
-struct Location {
-	int row;
-	int col;
-};
-
-typedef struct PathNode *PathPointer;
-
-//定義路徑節點結構，用來建立移動路徑 
-struct PathNode {
-	int cost; //距離原點的步數 
-	int steps; //距離目標的步數 
-	Location loc;
-	PathPointer parent;
-	PathPointer next;
-};
-
-void openWindow(); //開啟游戲視窗 
-void closeGame(NodePointer dragon); //處理遊戲結束邏輯 
-int playGame(int field[][GRID_SIDE], NodePointer dragon, NodePointer player); //遊戲進行邏輯 
-bool IsGameOver(NodePointer zombie, NodePointer player, int field[][GRID_SIDE]); //(生存者死亡條件：撞牆和撞到喪屍) 
-int showGameOverMsg(); //遊戲結束訊息
-void showInfo(); //顯示遊戲相關資訊 
-void drawGameField(int field[][GRID_SIDE]); //繪製遊戲區域 
-void drawSquare(int row, int col, int color); //繪製方塊 
-void controlZombieDirection(int field[][GRID_SIDE], NodePointer zombie, NodePointer player); //讀取AI輸入，並設定到所有喪屍節點 
-void controlPlayerDirection(int field[][GRID_SIDE], NodePointer player, NodePointer zombie); //讀取鍵盤方向輸入，或者AI輸入 
-void moveZombie(int field[][GRID_SIDE], NodePointer zombie); //繪製喪屍群前進一步的改變  
-void movePlayer(NodePointer player); //繪製生存者前進一步的改變  
-void createResource(int field[][GRID_SIDE], NodePointer zombie); //產生資源
-bool IsAtWall(int field[][GRID_SIDE], int row, int col); //判斷是否撞到牆  
-bool IsAtZombie(NodePointer zombie, int row, int col); //判斷是否撞到喪屍的身體
-bool IsCloseZombie(NodePointer zombie, int row, int col);//判斷是否撞到喪屍
-void playerCollectResource(int field[][GRID_SIDE], NodePointer player, NodePointer zombie); //處理生存者收集到資源邏輯 
-void addZombie(int field[][GRID_SIDE], NodePointer zombie, NodePointer player); //增加喪屍數量 
-void killZombie(NodePointer zombie); //隨機殺掉一隻喪屍 
-Location nextStepLoc(NodePointer node, Direction direct); //計算下一步的座標 
-Location findNearestResource(int field[][GRID_SIDE], NodePointer zombie); //尋找最接近資源的座標 
-//生存者如果無法找到有效路徑，暫時決定一個安全方向
-Direction safeDirect(int field[][GRID_SIDE], NodePointer player, NodePointer zombie);
-//喪屍如果無法找到有效路徑，暫時決定一個安全方向
-Direction safeDirect4Zombie(int field[][GRID_SIDE], NodePointer zombie);
-
-//喪屍尋找兩點之間可到達的路徑，不需考慮會不會撞到其他喪屍或者生存者，只需考慮不能撞到牆 
-PathPointer zombieFindPath(int field[][GRID_SIDE], Location startLoc, Location goalLoc);  
-//生存者尋找兩點之間可到達的路徑，必須考慮不能撞到喪屍或者牆 
-PathPointer playerFindPath(int field[][GRID_SIDE], Location startLoc, Location goalLoc, NodePointer zombie);
-void addPathQueue(PathNode pathNode); //將之後要拜訪的節點放入佇列裡 
-PathPointer popPathQueue(); //傳回路徑佇列中的元素，並將它從佇列中刪除 
-bool isPathQueueEmpty(); //判斷佇列是否為空 
-void resetPathQueue(); //重設佇列 
-void sortPathQueue(); //對佇列中的元素進行排序 
-bool IsInPathQueue(PathNode pathNode); //判斷該元素是否在佇列之中 
-PathPointer buildPath(PathPointer goal); //回傳到目標位置的路徑串列 
-int calcSteps(Location start, Location goal); //計算兩點之間需要移動的步數 
-bool visited(Location loc); //判斷是否該節點已經拜訪過 
-Direction getDirectionByPath(NodePointer zombie, PathPointer path); //從路徑資料判斷下一步方向 
-
-Direction zombieAI(int field[][GRID_SIDE], NodePointer zombie, Location target); //喪屍AI 
-Direction playerAI(int field[][GRID_SIDE], NodePointer player, NodePointer zombie); //生存者AI 
-
+#include "include/player.h"
+#include "include/MenuBtn.h"
+#include "include/screen.h"
 struct PathNode pathQueue[MAX_QUEUE_SIZE]; //宣告將要拜訪的節點柱列 
 int front; //queue 第一個元素的前一個位置 
 int rear; //queue 最後一個元素的位置
 
-int speed; //遊戲移動速度 
 int scoreSum = 0; //紀錄分數 
 int killedCount = 0; //殺死喪屍數量 
 int totalTime = 0; //紀錄遊戲時間 
 int stepCount = 0; //步數計數器 
 int const scorePerResource = 1; //每一份資源可得分數 
 bool IFPlayAI = false; //是否開啟AI模式 
+bool IFPause = false; //是否暫停
 GameClock gameClock;
+
+//menu
+int MenuBuffer = 0;
+//mouse
+int mouseX, mouseY;
+POINT CursorPosition;
+MenuBtn startBtn(150, 330, 280, 120), exitBtn(230, 390, 280, 120);//menu全部按鈕
+vector<MenuBtn> btn = {startBtn, exitBtn};
+//screen
+screen SCREEN;
 // 主程式      
 int main(){  	
 	openWindow();
-	
+	int key;
+	int x = 50;
+	while(TRUE){
+		
+		key = menu();
+		if(key == 1){
+			break;
+		}
+		else if(key == 2){
+			exit(1);
+		}
+		// if(kbhit()) key = getch();
+		// if(key == 'g') break;
+		// key = 0;
+		// setfillstyle(SOLID_FILL, YELLOW);
+		// bar(x-50, 0, x, 200);
+		// if(kbhit()) key = getch();
+		// if(key == 't') x+=1;
+
+
+
+		// else if(key == 'g') break;//if start clicked
+		// delay(5);
+		// cleardevice();
+	}
+	cleardevice();
+
 	while(TRUE){
 		
 		//設定遊戲場和障礙物 
@@ -163,15 +100,16 @@ int main(){
 										   {1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1},
 										   {1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1}}; 
 	   	
-		Node headPlayer = {2, 4, RIGHT, NULL}; //設定勇者初始位置和方向 
-		Node headZombie = {15, 15, RIGHT, NULL}; //設定喪屍屍頭初始位置和方向 
-		NodePointer zombie = &headZombie;
-		NodePointer player = &headPlayer;
+		character mainPlayer(2, 4, 8); //設定勇者初始位置和方向 
+		character zombie(15, 15, 10);
+		vector<character> zombies;
+		zombies.push_back(zombie);
 		char key;
-		key = playGame(field, zombie, player); //進行遊戲
+		key = playGame(field, zombies, mainPlayer); //進行遊戲
 		if (key == 'q' || key == 'Q')
-			closeGame(zombie); //如果生存者輸入'q'離開遊戲	
+			closeGame(zombies); //如果生存者輸入'q'離開遊戲	
 		else if (key == 's' || key == 'S') {
+			mainPlayer.dir = RIGHT;
 			continue; //如果生存者輸入's' 繼續遊戲
 		}
 			 		    
@@ -184,65 +122,56 @@ void openWindow(){
 }
 
 //處理遊戲結束邏輯 
-void closeGame(NodePointer zombie){
-	free(zombie);
+void closeGame(vector<character> &zombies){
+	zombies.clear();
 	exit(0);
 }
 
 //遊戲進行邏輯
-int playGame(int field[][GRID_SIDE], NodePointer zombie, NodePointer player) {
-	speed = INIT_SPEED;
-	stepCount = 0;
+int playGame(int field[][GRID_SIDE], vector<character> &zombies, character &Player) {
 	killedCount = 0; 
 	bool killed = true;
 	srand((unsigned)time(NULL)); //取目前系統時間作為亂數種子
 	gameClock.initClock();
-	drawGameField(field); //繪製遊戲區域 
-	createResource(field, zombie); //產生第一份資源 
+	createResource(field, zombies); //產生第一份資源
 	
 	while(true){
-				
-		int key = 0;
-		controlPlayerDirection(field, player, zombie);//讀取生存者輸入方向鍵，並將新方向設定到各喪屍節點 
-		movePlayer(player); //依據節點的方向，繪製新的喪屍位置
+		gameClock.updateClock();
+		SCREEN.update();
+		cleardevice();
+		//kb control
+		controlPlayerDirection(field, Player);
+		controlZombieDirection(field, zombies, Player);
+		updateScrean(Player, zombies, field);
 		
-		if(stepCount % 2 == 0){
-			controlZombieDirection(field, zombie, player); 
-			moveZombie(field, zombie); //依據節點的方向，繪製新的喪屍位置			
-		}
-
-		//新增喪屍數量 
-		if(stepCount % 30 == 0)
-			addZombie(field, zombie, player);
-
-		playerCollectResource(field, player, zombie); //判斷生存者是否有收集到資源，如果有增加分數 
-		
-		showInfo(); //顯示時間和分數資訊 
-		
-		if(IsGameOver(zombie, player, field)) //判斷是否符合遊戲結束條件， 
-			return showGameOverMsg(); //顯示遊戲結束訊息，並等待生存者輸入選項 
-		
-		//除了收集到資源會產生新資源，系統也隨機產生新資源
-		if (rand() % 20 == 0)
-			createResource(field, zombie);
-			
-		if(key != 0)
-			return key;
-		
-		delay(speed); //決定生存者與喪屍移動速度，speed越小移動越快 
-		stepCount++;
-		//讀取非方向鍵的其他鍵盤輸入 
-	   	if(kbhit()) {
-	   		char key;
-			key = getch();	
-			
-			//只有輸入大小寫的a, q 和 s，系統才有反應並將輸入結果拋到外層等待處理 
-			if (key == 'q' || key == 'Q' || key == 's' || key == 'S')
-				return key;
-			else if (key == 'a') //決定是否改變模式 ，主要有生存者模式和電腦操控的AI模式 
-				IFPlayAI = !IFPlayAI;
+		if(IsGameOver(zombies, Player, field)) {
+			return showGameOverMsg();
 		}
 	}
+}
+
+void updateScrean(character& Player, vector<character> &zombies, int field[][GRID_SIDE]) {
+	
+	drawGameField(field);
+	showInfo();
+	int x_o = (int)Player.x;
+	int y_o = (int)Player.y;
+	Player.movecharacter(gameClock.getDeltaTime());
+		drawSquare(y_o, x_o, BLACK);
+		drawSquare((int)Player.y, (int)Player.x, BLUE);
+	if(x_o != (int)Player.x || y_o != (int)Player.y) {
+		playerCollectResource(field, Player, zombies);
+	}
+	/*
+	for(character i:zombies) {
+		
+		x_o = (int)i.x;
+		y_o = (int)i.y;
+		i.movecharacter(gameClock.getDeltaTime());
+		drawSquare(y_o, x_o, BLACK);
+		drawSquare((int)i.y, (int)i.x, RED);
+	}
+	*/
 }
 
 //繪製遊戲區域，依據遊戲場矩陣設定繪製物件 
@@ -265,7 +194,9 @@ void drawGameField(int field[][GRID_SIDE]){
 
 //繪製方塊
 void drawSquare(int row, int col, int color){
-	
+	//row as y
+	//col as x
+
 	int squareHeight = SCREEN_HEIGHT / GRID_SIDE;
    	int SquareWidth = SCREEN_WIDTH / GRID_SIDE;
 	int left = 0, right = 0, bottom = 0, top = 0;
@@ -278,82 +209,13 @@ void drawSquare(int row, int col, int color){
    	bar(left , top, right, bottom);	//設定繪製方塊的位置 
 }
 
-//繪製喪屍每前進一步的改變 
-void moveZombie(int field[][GRID_SIDE], NodePointer zombie) {
-	int currRow, currCol;
-	
-	while (zombie != NULL){
-		currRow = zombie->row;
-		currCol = zombie->col;
-		
-		if(field[currRow][currCol] == RESOURCE)
-			drawSquare(currRow, currCol, GREEN);
-		else
-			drawSquare(currRow, currCol, BLACK);	
-		
-		//依據節點的方向屬性，設定移動下一步的位置	
-		switch(zombie->direct){
-			case RIGHT:
-				zombie->col++;
-				break;			
-			case LEFT:
-				zombie->col--;
-				break;
-			case UP:
-				zombie->row--;
-				break;			
-			case DOWN:
-				zombie->row++;
-				break;
-		}
-
-		drawSquare(zombie->row, zombie->col, RED);
-			
-		zombie = zombie -> next;	
-	}
-}
-
-//繪製生存者每前進一步的改變 
-void movePlayer(NodePointer player) {
-	int currRow, currCol;
-	if (player != NULL){
-		currRow = player->row;
-		currCol = player->col;
-		
-		switch(player->direct){
-			case RIGHT:
-				player->col++;
-				break;			
-			case LEFT:
-				player->col--;
-				break;
-			case UP:
-				player->row--;
-				break;			
-			case DOWN:
-				player->row++;
-				break;
-		}
-		drawSquare(player->row, player->col, BLUE);
-		drawSquare(currRow, currCol, BLACK);
-	}	
-}
-
 //判斷生存者是否死亡(死亡條件：撞牆和撞到自己身體) 
-bool IsGameOver(NodePointer zombie, NodePointer player, int field[][GRID_SIDE]){
-	NodePointer head = zombie;
-	
-	//判斷是否撞到牆 
-	if (IsAtWall(field, head->row, head->col))
-		return true;
-	if (IsAtWall(field, player->row, player->col))
-		return true;
-	
+bool IsGameOver(vector<character> &zombies, character &Player, int field[][GRID_SIDE]){
+
 	//檢查是否AI撞到喪屍 
-	if(player != NULL) {
-		if(IsAtZombie(zombie, player->row, player->col))
+	if(IsAtZombie(zombies, Player.y, Player.x))
 			return true;
-	}
+	
 	
 	return false;
 }
@@ -366,13 +228,12 @@ bool IsAtWall(int field[][GRID_SIDE], int row, int col){
 }
 
 //判斷是否撞到喪屍
-bool IsAtZombie(NodePointer zombie, int row, int col){
+bool IsAtZombie(vector<character> &zombies, int row, int col){
 
-	while(zombie != NULL){
-		if (row == zombie->row && col == zombie->col)
+	for(character i : zombies) {
+		if (row == i.y && col == i.x)
 			return true;
-		zombie = zombie -> next;
-	}
+	}		
 	return false;
 }
 
@@ -398,19 +259,19 @@ int showGameOverMsg(){
 	   	settextstyle(TRIPLEX_FONT, HORIZ_DIR , 7);
 	   	outtextxy(0, SCREEN_HEIGHT / 2, msg1);	   
 		   	
-	   	if(kbhit()) {
-	   		char key;
-			key = getch();	
-			if (key == 'q' || key == 'Q' || key == 's' || key == 'S') {
-				return key; 				
-			}
+	   	if (GetAsyncKeyState('Q')){
+			printf("\n\n\nQ pressed\n\n\n\n");
+			return 'q';
+		}
+		else if(GetAsyncKeyState('S')){
+			printf("\n\n\nS pressed\n\n\n\n");
+			return 's';
 		}
 	}	
 }
 
 //顯示遊戲相關資訊
 void showInfo(){
-	gameClock.updateClock();
 	char timeMsg[45] = " Time:";
 	char scoreMsg[45] = "Score:";
 	char killedMsg[50] = "Killed Zombie:";
@@ -461,55 +322,73 @@ void showInfo(){
 }
 
 //讀取鍵盤方向輸入，並設定到生存者節點 
-void controlPlayerDirection(int field[][GRID_SIDE], NodePointer player, NodePointer zombie) {
+void controlPlayerDirection(int field[][GRID_SIDE], character &Player) {
 	
-	Direction playerDirect = player -> direct;
-	
+	Direction playerDirect = Player.dir;
 	//get key code by pressing keybord
-	int key;
-	if(kbhit()) 
-		key = getch();
-		
-	//decide zombie's moving direction	
-	switch(key){
-		case KEY_RIGHT:
-			playerDirect = RIGHT;
-			break;			
-		case KEY_LEFT:
-			playerDirect = LEFT;
-			break;		
-		case KEY_UP:
+	if(GetAsyncKeyState(VK_UP)){
+		if (IsAtWall(field, Player.y - 1, Player.x)){
+			playerDirect = STOP;
+		}
+		else{
 			playerDirect = UP;
-			break;				
-		case KEY_DOWN:
+		}
+	
+	}
+	else if(GetAsyncKeyState(VK_DOWN)){
+		if (IsAtWall(field, Player.y + 1, Player.x)){
+			playerDirect = STOP;
+		}
+		else{
 			playerDirect = DOWN;
-			break;				
+		}
+	}
+	else if(GetAsyncKeyState(VK_LEFT)){
+		if (IsAtWall(field, Player.y, Player.x - 1)){
+			playerDirect = STOP;
+		}
+		else{
+			playerDirect = LEFT;
+		}
+	}
+	else if(GetAsyncKeyState(VK_RIGHT)){
+		if (IsAtWall(field, Player.y, Player.x + 1)){
+			playerDirect = STOP;
+		}
+		else{
+			playerDirect = RIGHT;
+		}
+	}
+	else {
+		playerDirect = STOP;
 	}
 		
-	if (IFPlayAI)
-		playerDirect = playerAI(field, player, zombie);
+	//decide zombie's moving direction	
 	
 	
-	player -> direct = playerDirect;
-			
+		
+	/*if (IFPlayAI)
+		playerDirect = playerAI(field, player, zombie);*/
+	
+	
+	Player.dir = playerDirect;
+	
 }
 
 
 //讀取鍵盤方向輸入，並設定到所有喪屍節點 
-void controlZombieDirection(int field[][GRID_SIDE], NodePointer zombie, NodePointer player) {
+void controlZombieDirection(int field[][GRID_SIDE], vector<character> zombies, character &Player) {
 	int count = 0;
-	while(zombie != NULL){
-		Location target = {player -> row + count, player -> col + count};
-		Direction zombieDirect = zombieAI(field, zombie, target);
-		zombie -> direct = zombieDirect;
-		zombie = zombie -> next;
+	for(character i: zombies){
+		Location target = {Player.y + count, Player.x + count};
+		Direction zombieDirect = zombieAI(field, i, target);
+		i.dir = zombieDirect;
 		count += 2;
 	}	
-	
 }
 
 //產生資源
-void createResource(int field[][GRID_SIDE], NodePointer zombie){
+void createResource(int field[][GRID_SIDE], vector<character> &zombies){
 	int row, col, i, amount = RESOURCE_AMOUNT;
 
 	for(i=0; i< amount; i++){
@@ -517,7 +396,7 @@ void createResource(int field[][GRID_SIDE], NodePointer zombie){
 		do{
 			row = rand() % GRID_SIDE;
 			col = rand() % GRID_SIDE;	
-		}while(IsAtWall(field, row, col) || IsAtZombie(zombie, row, col));
+		}while(IsAtWall(field, row, col) || IsAtZombie(zombies, row, col));
 	
 		field[row][col] = RESOURCE;
 		drawSquare(row,col, GREEN);			
@@ -526,72 +405,42 @@ void createResource(int field[][GRID_SIDE], NodePointer zombie){
 
 
 //系統處理生存者收集到資源邏輯
-void playerCollectResource(int field[][GRID_SIDE], NodePointer player, NodePointer zombie){
+void playerCollectResource(int field[][GRID_SIDE], character &Player, vector<character> &zombies){
 	//如果生存者與資源位置重疊，就是收集到資源
-	if(field[player->row][player->col] == RESOURCE){
-		field[player->row][player->col] = EMPTY; //將該資源清空 
-		printf("The player has eaten food at row: %d, col: %d\n", player->row, player->col);
+	if(field[(int)Player.y][(int)Player.x] == RESOURCE){
+		field[(int)Player.y][(int)Player.x] = EMPTY; //將該資源清空 
+		printf("The player has eaten food at row: %d, col: %d\n", Player.y, Player.x);
 		scoreSum += scorePerResource; //紀錄分數 
-		createResource(field, player); //產生新的資源
+		createResource(field, zombies); //產生新的資源
 		
 		//收集一定數量的資源可以消滅一隻喪屍 
 		if(scoreSum % PER_RESOURCE_KILL == 0) 
-			killZombie(zombie);
+			killZombie(zombies);
 	}
 }
 
 //增加喪屍數量 
-void addZombie(int field[][GRID_SIDE], NodePointer zombie, NodePointer player){
-	int row, col;
-	NodePointer tail = NULL;
-	NodePointer newNode = (NodePointer) malloc(sizeof(Node)); //初始化一個新節點 
-	
-	//尋找最後一個喪屍節點 
-	tail = zombie;
-	while(tail->next != NULL){
-		tail = tail -> next;
-	}
-	//將最後一位喪屍的方向屬性給新節點 
-	newNode -> direct = tail -> direct;
-	
+void addZombie(int field[][GRID_SIDE], vector<character> &zombies, character &Player){
+	int row, col;	
 	do{
 		row = rand() % GRID_SIDE;
 		col = rand() % GRID_SIDE;	
-	}while(IsAtWall(field, row, col) || IsAtZombie(zombie, row, col) || (player->row == row && player->col == col));	
+	}while(IsAtWall(field, row, col) || IsAtZombie(zombies, row, col) || (Player.y == row && Player.x == col));	
 	
-	newNode -> row = row;
-	newNode -> col = col;
-	
-	tail -> next = newNode; //將尾巴節點連接到新節點 
-	newNode -> next = NULL;		
+	character newZombie(col, row, 4);
+	zombies.push_back(newZombie);
 }
 
 //殺掉一隻喪屍
-void killZombie(NodePointer zombie){
-	int i;
-	NodePointer temp, killed;
-	temp = zombie;
-
-	killed = zombie;
-	
-	//不會殺光所有喪屍，至少會保留一隻 
-	if(zombie->next == NULL)
-		return;
-	while(killed->next != NULL){
-		temp = killed;
-		killed = killed -> next;
+void killZombie(vector<character> &zombies){
+	if(zombies.size() > 1) {
+		zombies.pop_back();
 	}
-	temp -> next = killed -> next;
-	drawSquare(killed->row, killed->col, BLACK);
-	printf("\n(%d, %d) is killed\n", killed->row, killed->col);
-	free(killed);
-	killedCount ++;
 }
-
 //喪屍的AI控制 
-Direction zombieAI(int field[][GRID_SIDE], NodePointer zombie, Location target) {
-	Direction zombieDirect = zombie -> direct;
-	Location start = {zombie -> row, zombie -> col};
+Direction zombieAI(int field[][GRID_SIDE], character zombie, Location target) {
+	Direction zombieDirect = zombie.dir;
+	Location start = {zombie.y, zombie.x};
 
 
 	PathPointer path = zombieFindPath(field, start, target);
@@ -605,10 +454,10 @@ Direction zombieAI(int field[][GRID_SIDE], NodePointer zombie, Location target) 
 }
 
 //從路徑資料判斷下一步方向 
-Direction getDirectionByPath(NodePointer head, PathPointer path){
+Direction getDirectionByPath(character current, PathPointer path){
 	PathPointer nextPath = path->next;
-	int horizontal = nextPath->loc.col - head->col;
-	int vertical = nextPath->loc.row - head->row;
+	int horizontal = nextPath->loc.col - current.x;
+	int vertical = nextPath->loc.row - current.y;
 	if(horizontal == 1)
 		return RIGHT;
 	else if(horizontal == -1)
@@ -618,11 +467,12 @@ Direction getDirectionByPath(NodePointer head, PathPointer path){
 		return DOWN;
 	else if(vertical == -1)
 		return UP;
-	return 	head -> direct;		
+	return 	current.dir;		
 }
 
-//喪屍如果無法找到有效路徑，暫時決定一個安全方向 
-Direction safeDirect4Zombie(int field[][GRID_SIDE], NodePointer zombie){
+//喪屍如果無法找到有效路徑，暫時決定一個安全方向
+
+Direction safeDirect4Zombie(int field[][GRID_SIDE], character zombie){
 	int i;
 	int dirSize = 4;
 	Location loc;
@@ -639,7 +489,7 @@ Direction safeDirect4Zombie(int field[][GRID_SIDE], NodePointer zombie){
 	loc = nextStepLoc(zombie, LEFT);
 	if(!IsAtWall(field, loc.row, loc.col))
 		return LEFT;						
-	return zombie->direct;
+	return zombie.dir;
 }
 
 //喪屍尋找兩點之間可到達的路徑，不需考慮會不會撞到其他喪屍或者生存者
@@ -781,14 +631,14 @@ bool visited(Location loc){
 }
 
 //尋找最接近資源
-Location findNearestResource(int field[][GRID_SIDE], NodePointer me){
+Location findNearestResource(int field[][GRID_SIDE], character Player){
 	int rowDis, colDis, row, col, nearest = 100000;
 	Location nearestFood = {-1, -1};
 	for(row = 0; row < GRID_SIDE; row++){
 		for(col = 0; col < GRID_SIDE; col++){
 			if(field[row][col] == RESOURCE){
-				rowDis = abs(row - me -> row);
-				colDis = abs(col - me -> col);
+				rowDis = abs(row - Player.y);
+				colDis = abs(col - Player.x);
 				if(nearest > (rowDis + colDis)){
 					nearest = (rowDis + colDis);
 					nearestFood.row = row;
@@ -801,47 +651,49 @@ Location findNearestResource(int field[][GRID_SIDE], NodePointer me){
 }
 
 //實作生存者AI 
-Direction playerAI(int field[][GRID_SIDE], NodePointer player, NodePointer zombie){
-	Direction playerDirect = player -> direct;
-	Location start = {player -> row, player -> col};
-	Location nearestResource = findNearestResource(field, player);
+/*
+Direction playerAI(int field[][GRID_SIDE], player &Player, NodePointer zombie){
+	Direction playerDirect = Player.dir;
+	Location start = {Player.y, Player.x};
+	Location nearestResource = findNearestResource(field, Player);
 	if(nearestResource.row != -1 || nearestResource.col != -1){
 		PathPointer path = playerFindPath(field, start, nearestResource, zombie);
 		if(path){
-			playerDirect = getDirectionByPath(player, path);
+			playerDirect = getDirectionByPath(Player, path);
 		}
 		else
-			playerDirect = safeDirect(field, player, zombie);
+			playerDirect = safeDirect(field, Player, zombie);
 	}else{printf("no resource");}
 	
 	return playerDirect;
 }
 
 //生存者如果無法找到有效路徑，暫時決定一個安全方向 
-Direction safeDirect(int field[][GRID_SIDE], NodePointer player, NodePointer zombie){
+Direction safeDirect(int field[][GRID_SIDE], player &Player, NodePointer zombie){
 	int i;
 	int dirSize = 4;
 	Location loc;
 	
-	loc = nextStepLoc(player, UP);
+	loc = nextStepLoc(Player, UP);
 	if(!IsAtWall(field, loc.row, loc.col) && !IsCloseZombie(zombie, loc.row, loc.col))
 		return UP;
-	loc = nextStepLoc(player, DOWN);
+	loc = nextStepLoc(Player, DOWN);
 	if(!IsAtWall(field, loc.row, loc.col) && !IsCloseZombie(zombie, loc.row, loc.col))
 		return DOWN;
-	loc = nextStepLoc(player, RIGHT);
+	loc = nextStepLoc(Player, RIGHT);
 	if(!IsAtWall(field, loc.row, loc.col) && !IsCloseZombie(zombie, loc.row, loc.col))
 		return RIGHT;
-	loc = nextStepLoc(player, LEFT);
+	loc = nextStepLoc(Player, LEFT);
 	if(!IsAtWall(field, loc.row, loc.col) && !IsCloseZombie(zombie, loc.row, loc.col))
 		return LEFT;						
-	return player->direct;
+	return Player.dir;
 }
-
+*/
 //計算下一步的座標 
-Location nextStepLoc(NodePointer node, Direction direct){
-	int currRow =  node -> row;
-	int currCol = node -> col;
+
+Location nextStepLoc(character current, Direction direct){
+	int currRow =  current.y;
+	int currCol = current.x;
 	int nextRow, nextCol;
 	Location loc;
 	switch(direct){
@@ -866,7 +718,7 @@ Location nextStepLoc(NodePointer node, Direction direct){
 	loc.col = nextCol;
 	return loc;
 }
-
+/*
 //生存者尋找兩點之間可到達的路徑，必須考慮會不會撞到牆或者喪屍 
 PathPointer playerFindPath(int field[][GRID_SIDE], Location startLoc, Location goalLoc, NodePointer zombie){
 	resetPathQueue();
@@ -924,3 +776,4 @@ bool IsCloseZombie(NodePointer zombie, int row, int col){
 
 	return false;
 }
+*/

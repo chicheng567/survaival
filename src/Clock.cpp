@@ -7,7 +7,6 @@ GameClock::GameClock() {
 }
 void GameClock::updateClock() {
     clock_t TimeTMP = clock();
-    printf("time :%f\ntime last: %f\n", (double)TimeTMP / CLOCKS_PER_SEC, (double)lastClock / CLOCKS_PER_SEC);
     DeltaTime = TimeTMP - lastClock;
     totalTime += DeltaTime;
     lastClock = TimeTMP;

@@ -4,7 +4,7 @@
 
 # Compiler settings - Can be customized.
 CC = g++
-CXXFLAGS = -std=c++11 -Wall
+CXXFLAGS = -std=c++11 -Wall -D _WIN32_WINNT=0X0501
 LDFLAGS = -lbgi -lgdi32 -luser32
 
 # Makefile settings - Can be customized.

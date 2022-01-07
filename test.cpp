@@ -1,19 +1,28 @@
 #include<iostream>
-#include<conio.h>
-#include<windows.h>
-#include<time.h>
 using namespace std;
-int main()
-{
-    clock_t DeltaTime;
-    clock_t totalTime;
-    clock_t lastClock;
-    while(1)
-    {
-        clock_t TimeTMP = clock();
-        DeltaTime = TimeTMP - lastClock;
-        totalTime += DeltaTime;
-        lastClock = totalTime;
-        
+class motherClass {
+public:
+    int a;
+    int b;
+    void motherFunc() {
+        cout << "This is func for all son" << endl;
     }
+};
+class sonClass_1st : public motherClass {
+    int c;
+public:
+    void func() {
+        cout << "this is first son" << endl;
+    }
+};
+class sonClass_2st : public motherClass {
+    int d;
+    public:
+    void func() {
+        cout << "this is second son" << endl;
+    }
+};
+
+void testFunc(motherClass input) {
+    ;
 }
