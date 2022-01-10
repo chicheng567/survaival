@@ -1,4 +1,5 @@
 #include<iostream>
+#include<windows.h>
 using namespace std;
 class motherClass {
 public:
@@ -23,6 +24,8 @@ class sonClass_2st : public motherClass {
     }
 };
 
-void testFunc(motherClass input) {
-    ;
+int main() {
+    while(1) {
+        cout << GetAsyncKeyState(VK_SPACE) << endl;
+    }
 }

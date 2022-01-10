@@ -3,11 +3,11 @@
 #define  _PLAYER_H_
 //宣告前進方向列舉函數 
 enum Direction {
-    STOP,
 	RIGHT, 
 	LEFT, 
 	UP, 
-	DOWN
+	DOWN, 
+    STOP
 };
 
 class character {

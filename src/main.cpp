@@ -40,22 +40,7 @@ int main(){
 		else if(key == 2){
 			exit(1);
 		}
-		// if(kbhit()) key = getch();
-		// if(key == 'g') break;
-		// key = 0;
-		// setfillstyle(SOLID_FILL, YELLOW);
-		// bar(x-50, 0, x, 200);
-		// if(kbhit()) key = getch();
-		// if(key == 't') x+=1;
-
-
-
-		// else if(key == 'g') break;//if start clicked
-		// delay(5);
-		// cleardevice();
 	}
-	cleardevice();
-
 	while(TRUE){
 		
 		//設定遊戲場和障礙物 
@@ -129,39 +114,27 @@ void closeGame(vector<character> &zombies){
 
 //遊戲進行邏輯
 int playGame(int field[][GRID_SIDE], vector<character> &zombies, character &Player) {
+	/*
 	killedCount = 0; 
 	bool killed = true;
 	srand((unsigned)time(NULL)); //取目前系統時間作為亂數種子
 	gameClock.initClock();
 	createResource(field, zombies); //產生第一份資源
-	
+	*/
 	while(true){
-		gameClock.updateClock();
 		SCREEN.update();
-		cleardevice();
-		//kb control
-		controlPlayerDirection(field, Player);
-		controlZombieDirection(field, zombies, Player);
-		updateScrean(Player, zombies, field);
-		
-		if(IsGameOver(zombies, Player, field)) {
-			return showGameOverMsg();
-		}
+		cout << GetAsyncKeyState(VK_SPACE);
 	}
 }
 
 void updateScrean(character& Player, vector<character> &zombies, int field[][GRID_SIDE]) {
 	
 	drawGameField(field);
-	showInfo();
-	int x_o = (int)Player.x;
-	int y_o = (int)Player.y;
+	//showInfo();
 	Player.movecharacter(gameClock.getDeltaTime());
-		drawSquare(y_o, x_o, BLACK);
-		drawSquare((int)Player.y, (int)Player.x, BLUE);
-	if(x_o != (int)Player.x || y_o != (int)Player.y) {
-		playerCollectResource(field, Player, zombies);
-	}
+	drawSquare((int)Player.y, (int)Player.x, BLUE);
+	
+	//playerCollectResource(field, Player, zombies);
 	/*
 	for(character i:zombies) {
 		
@@ -322,12 +295,17 @@ void showInfo(){
 }
 
 //讀取鍵盤方向輸入，並設定到生存者節點 
+
+
+
 void controlPlayerDirection(int field[][GRID_SIDE], character &Player) {
 	
 	Direction playerDirect = Player.dir;
+	
 	//get key code by pressing keybord
-	if(GetAsyncKeyState(VK_UP)){
-		if (IsAtWall(field, Player.y - 1, Player.x)){
+	/*
+	if(GetKeyState(VK_UP) < 0){
+		if (IsAtWall(field, Player.y-1, Player.x)){
 			playerDirect = STOP;
 		}
 		else{
@@ -335,46 +313,39 @@ void controlPlayerDirection(int field[][GRID_SIDE], character &Player) {
 		}
 	
 	}
-	else if(GetAsyncKeyState(VK_DOWN)){
-		if (IsAtWall(field, Player.y + 1, Player.x)){
+	else if(GetKeyState(VK_DOWN) < 0){
+		if (IsAtWall(field, Player.y+1, Player.x)){
 			playerDirect = STOP;
 		}
 		else{
 			playerDirect = DOWN;
 		}
 	}
-	else if(GetAsyncKeyState(VK_LEFT)){
-		if (IsAtWall(field, Player.y, Player.x - 1)){
+	else if(GetKeyState(VK_LEFT) < 0){
+		if (IsAtWall(field, Player.y, Player.x-1)){
 			playerDirect = STOP;
 		}
 		else{
 			playerDirect = LEFT;
 		}
 	}
-	else if(GetAsyncKeyState(VK_RIGHT)){
-		if (IsAtWall(field, Player.y, Player.x + 1)){
+	else if(GetKeyState(VK_RIGHT) < 0){
+		if (IsAtWall(field, Player.y, Player.x+1)){
 			playerDirect = STOP;
 		}
 		else{
 			playerDirect = RIGHT;
 		}
 	}
-	else {
+	else if(GetKeyState(VK_UP) >= 0 && GetKeyState(VK_DOWN) >= 0 && GetKeyState(VK_LEFT) >= 0 && GetKeyState(VK_RIGHT) >= 0){
 		playerDirect = STOP;
 	}
-		
+	*/	
 	//decide zombie's moving direction	
-	
-	
-		
-	/*if (IFPlayAI)
-		playerDirect = playerAI(field, player, zombie);*/
-	
-	
+	cout << GetKeyState(VK_SPACE) << endl;
 	Player.dir = playerDirect;
 	
 }
-
 
 //讀取鍵盤方向輸入，並設定到所有喪屍節點 
 void controlZombieDirection(int field[][GRID_SIDE], vector<character> zombies, character &Player) {
@@ -414,8 +385,8 @@ void playerCollectResource(int field[][GRID_SIDE], character &Player, vector<cha
 		createResource(field, zombies); //產生新的資源
 		
 		//收集一定數量的資源可以消滅一隻喪屍 
-		if(scoreSum % PER_RESOURCE_KILL == 0) 
-			killZombie(zombies);
+		/*if(scoreSum % PER_RESOURCE_KILL == 0) 
+			killZombie(zombies);*/
 	}
 }
 

@@ -9,6 +9,7 @@ void screen::update(){
     setactivepage(page);
     setvisualpage(1-page);
     page = 1-page;
+    delay(5);
 }
 
 void screen::swap(){

@@ -9,6 +9,7 @@
 #include <vector>
 #include "mingw.thread.h"
 #include "player.h"
+#include <iostream>
 #define SCREEN_HEIGHT 500 //設定遊戲視窗高度 
 #define SCREEN_WIDTH 500 //設定遊戲視窗寬度
 #define GRID_SIDE 40 //設定遊戲方陣每邊格子數量 

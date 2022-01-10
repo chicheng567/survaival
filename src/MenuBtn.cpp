@@ -31,6 +31,7 @@ extern vector<MenuBtn> btn;
 
 //menu頁面
 int menu(){
+	
 	settextstyle(BOLD_FONT, HORIZ_DIR , 6);
 	SCREEN.update();
 	cleardevice();
@@ -40,12 +41,13 @@ int menu(){
 	if(GetAsyncKeyState(VK_RIGHT)&&light_on){
 		light_on = false;
 		play_animation = false;
-		for(int u =0;u<10;u++){
+		int u = 0;
+		for(u;u<10;u++){
 			animation_duration[u] = 0;
 		}
 	}
 	if(GetAsyncKeyState(VK_SPACE)){
-		return currentButton;
+		return currentButton + 1;
 	}
 	if(!play_animation&&GetAsyncKeyState(VK_LEFT)){
 		play_animation = true;
@@ -113,13 +115,13 @@ int menu(){
 	outtextxy(btn[1].startX, btn[1].startY, "Quit");
 	outtextxy(btn[0].startX, btn[0].startY, "StartGame");
 	if(GetAsyncKeyState(VK_UP)){//選項壞掉
-		currentButton = 1;
+		currentButton = 0;
 	}else if(GetAsyncKeyState(VK_DOWN)){
-		currentButton = 2;
+		currentButton = 1;
 	}
 
 	settextstyle(BOLD_FONT, HORIZ_DIR , 6);
-	if(currentButton == 1){//current == start
+	if(currentButton == 0){//current == start
 		setcolor(WHITE);
 		outtextxy(btn[0].startX, btn[0].startY, "->StartGame");
 		setcolor(LIGHTGRAY);
@@ -160,6 +162,7 @@ int menu(){
 		{
 		case 1:
 			/* code */
+			yStep++;
 			break;
 		case -1:
 			yStep--;
@@ -239,6 +242,7 @@ int menu(){
 	// 		}
 	// }
 	// MenuBuffer = 1 - MenuBuffer;
+	delay(5);
 	return 0;
 }
 void animate_light(int d_time, int set_time){
